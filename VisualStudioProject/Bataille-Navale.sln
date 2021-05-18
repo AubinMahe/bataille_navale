@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31129.286
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Bataille-Navale", "Bataille-Navale.vcxproj", "{0FF382C7-2453-45FA-A6B0-2F62F75D5313}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0FF382C7-2453-45FA-A6B0-2F62F75D5313}.Debug|x64.ActiveCfg = Debug|x64
+		{0FF382C7-2453-45FA-A6B0-2F62F75D5313}.Debug|x64.Build.0 = Debug|x64
+		{0FF382C7-2453-45FA-A6B0-2F62F75D5313}.Release|x64.ActiveCfg = Release|x64
+		{0FF382C7-2453-45FA-A6B0-2F62F75D5313}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D51D8B24-255D-4FFE-842E-3F50A72BF8DE}
+	EndGlobalSection
+EndGlobal
