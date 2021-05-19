@@ -1,17 +1,14 @@
 #include "protocole.h"
+
 #include "errors.h"
 #include "traces.h"
 #include "utils.h"
 
-#include <errno.h>
-#include <fcntl.h>
-#include <ncurses.h> // getch()
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#define TOUCHE_ECHAP 27
+#include <errno.h>   // errno, EAGAIN
+#include <fcntl.h>   // fcntl, F_SETFL, F_GETFL, O_NONBLOCK
+#include <stdlib.h>  // malloc, free, atoi
+#include <string.h>  // memcpy, memset, strchr, strlen
+#include <unistd.h>  // close()
 
 bool envoyer_message( Jeu * jeu, Entete entete, const void * corps, size_t taille_du_corps ) {
    TRACE( jeu->journal, "%s", entete_texte( entete ));
@@ -45,13 +42,20 @@ bool requete_reponse(
          return false;
       }
       memset( message, 0, taille );
-      encore = true;
+      encore = ( jeu->etat != Fin_du_programme );
       while( encore ) {
          retCode = recv( jeu->socket, message, taille, 0 );
          if( retCode < 0 ) {
             encore = ( errno == EAGAIN );
             if( encore ) {
-               if(( ! jeu->est_une_ia )&&( getch() == TOUCHE_ECHAP )) {
+               if( jeu->est_une_ia ) {
+                  if( jeu->etat == Fin_du_programme ) {
+                     free( message );
+                     return false;
+                  }
+                  sleep_ms( 250 );
+               }
+               else if( jeu->interruption()) {
                   jeu->action = Quitter;
                   jeu->etat   = Fin_du_programme;
                   free( message );
@@ -79,7 +83,7 @@ bool requete_reponse(
                memcpy( reponse, message+1, taille_de_la_reponse );
             }
             else {
-               encore = true;
+               encore = ( jeu->etat != Fin_du_programme );
             }
          }
       }
@@ -89,7 +93,7 @@ bool requete_reponse(
    return ( retCode > 0 );
 }
 
-bool lire_la_socket_et_le_clavier( Jeu * jeu, Entete entete, void * corps, size_t taille_du_corps, unsigned delai_max ) {
+bool lire_la_socket( Jeu * jeu, Entete entete, void * corps, size_t taille_du_corps, unsigned delai_max ) {
    TRACE( jeu->journal, "%s, delai = %ld", entete_texte( entete ), delai_max );
    uint64_t atStart = heure_courante_en_ms();
    size_t taille = 1+taille_du_corps;
@@ -114,11 +118,16 @@ bool lire_la_socket_et_le_clavier( Jeu * jeu, Entete entete, void * corps, size_
          free( message );
          return false;
       }
-      sleep_ms( 20 );
-      if(( ! jeu->est_une_ia )&&( getch() == TOUCHE_ECHAP )) {
+      if( jeu->est_une_ia ) {
+         if( jeu->etat == Fin_du_programme ) {
+            free( message );
+            return false;
+         }
+      }
+      else if( jeu->interruption()) {
          jeu->action = Quitter;
          jeu->etat   = Fin_du_programme;
-         TRACE( jeu->journal, "touche 'Echap' %s", "pressée" );
+         TRACE( jeu->journal, "Touche 'Echap' %s", "pressée" );
          free( message );
          return false;
       }
@@ -130,10 +139,11 @@ bool lire_la_socket_et_le_clavier( Jeu * jeu, Entete entete, void * corps, size_
          free( message );
          return false;
       }
+      sleep_ms( 20 );
    }
 }
 
-bool initialiser_la_socket( Jeu * jeu ) {
+BN_API bool initialiser_le_protocole( Jeu * jeu, bool l_adversaire_est_l_ordinateur, unsigned delai_max ) {
    ENTREE( jeu->journal );
 #ifdef _WIN32
    WSADATA wsaData;
@@ -158,8 +168,6 @@ bool initialiser_la_socket( Jeu * jeu ) {
 #else
    fcntl( jeu->socket, F_SETFL, fcntl( jeu->socket, F_GETFL, 0 ) | O_NONBLOCK );
 #endif
-   jeu->est_une_ia = strcmp( jeu->nom_du_joueur, ORDINATEUR ) == 0;
-   bool l_adversaire_est_l_ordinateur = ( ! jeu->est_une_ia )&&( strcmp( jeu->nom_de_l_adversaire, ORDINATEUR ) == 0 );
    TRACE( jeu->journal, "le joueur est une ia : %s, l_adversaire_est_l_ordinateur : %s",
       jeu->est_une_ia ? "oui" : "non", l_adversaire_est_l_ordinateur ? "oui" : "non" );
    if( l_adversaire_est_l_ordinateur ) {
@@ -203,15 +211,16 @@ bool initialiser_la_socket( Jeu * jeu ) {
          ECHEC( jeu->journal );
          return false;
       }
-      ssize_t retCode;
-      bool encore;
-      uint64_t atStart = heure_courante_en_ms();
+      ssize_t        retCode;
+      bool           encore;
+      const uint64_t atStart    = heure_courante_en_ms();
+      const size_t   taille_msg = strlen( jeu->nom_du_joueur ) + 1;
       memset( jeu->nom_de_l_adversaire, 0, ADVERSAIRE_MAX );
       do {
          encore = false;
-         if( envoyer_message( jeu, PROTOCOLE_POIGNEE_DE_MAIN, jeu->nom_du_joueur, strlen( jeu->nom_du_joueur ) + 1 )) {
+         if( envoyer_message( jeu, PROTOCOLE_POIGNEE_DE_MAIN, jeu->nom_du_joueur, taille_msg )) {
             if( jeu->etat != Debut_du_programme ) {
-               TRACE( jeu->journal, "requête envoyée (%"FMT_SIZE_T"d octet%s)", retCode, ( retCode > 1 ) ? "s" : "" );
+               TRACE( jeu->journal, "requête envoyée (%"FMT_SIZE_T"d octet%s)", taille_msg, ( taille_msg > 1 ) ? "s" : "" );
             }
             char message[1+ADVERSAIRE_MAX];
             retCode = recv( jeu->socket, message, 1+ADVERSAIRE_MAX, 0 );
@@ -220,10 +229,11 @@ bool initialiser_la_socket( Jeu * jeu ) {
                if( encore ) {
                   sleep_ms( 1000 );
                   uint64_t now = heure_courante_en_ms();
-                  if( now - atStart > DELAI_MAX_POUR_CONNECTER_LES_JOUEURS ) {
+                  if( now - atStart > delai_max ) {
                      jeu->action = Quitter;
                      jeu->etat   = Fin_du_programme;
-                     TRACE( jeu->journal, "échec : expiration du délai (%ld > %u)", now - atStart, DELAI_MAX_POUR_CONNECTER_LES_JOUEURS );
+                     TRACE( jeu->journal, "échec : expiration du délai (%ld > %u)",
+                        now - atStart, delai_max );
                      return false;
                   }
                }
@@ -235,7 +245,8 @@ bool initialiser_la_socket( Jeu * jeu ) {
             else {
                encore = ( message[0] != PROTOCOLE_POIGNEE_DE_MAIN )&&( jeu->etat != Fin_du_programme );
                snprintf( jeu->nom_de_l_adversaire, sizeof( jeu->nom_de_l_adversaire ), "%s", message + 1 );
-               TRACE( jeu->journal, "réponse reçue (%"FMT_SIZE_T"d octet%s)", retCode, ( retCode > 1 ) ? "s" : "" );
+               TRACE( jeu->journal, "réponse reçue (%"FMT_SIZE_T"d octet%s) : %s",
+                  retCode, ( retCode > 1 ) ? "s" : "", entete_texte( message[0] ));
             }
          }
          else {
@@ -247,4 +258,16 @@ bool initialiser_la_socket( Jeu * jeu ) {
    }
    ECHEC( jeu->journal );
    return false;
+}
+
+BN_API void liberer_les_ressources_reseau( Jeu ** jeux ) {
+   ENTREE( jeux[0]->journal );
+   for( size_t i = 0; i < 2; ++i ) {
+      Jeu * jeu = jeux[i];
+#ifdef _WIN32
+      closesocket( jeu->socket );
+#else
+      close( jeu->socket );
+#endif
+   }
 }

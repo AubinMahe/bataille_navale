@@ -22,6 +22,19 @@
 #  define  make_dir(C,P)   _mkdir(C)
 #  define  getpid          _getpid
 #  define  FMT_SIZE_T      "ll"
+#  ifdef BUILDING_DLL
+#     ifdef __GNUC__
+#        define BN_API __attribute__ ((dllexport))
+#     else
+#        define BN_API __declspec(dllexport)
+#     endif
+#  else
+#     ifdef __GNUC__
+#        define BN_API __attribute__ ((dllimport))
+#     else
+#        define BN_API __declspec(dllimport)
+#     endif
+#  endif
 #else
 #  include <arpa/inet.h>
 #  include <pthread.h>
@@ -31,4 +44,9 @@
    typedef int             socket_t;
 #  define  make_dir(C,P)   mkdir(C,P)
 #  define  FMT_SIZE_T      "l"
+#  if __GNUC__ >= 4
+#     define BN_API __attribute__ ((visibility ("default")))
+#  else
+#     define BN_API
+#  endif
 #endif

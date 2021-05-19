@@ -1,11 +1,17 @@
 #include "ia.h"
+
+#include "delais.h"
+#include "errors.h"
 #include "protocole.h"
 #include "traces.h"
 #include "utils.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>  // close()
+#include <limits.h>  // PATH_MAX
+#include <stdlib.h>  // malloc, rand
+#include <string.h>  // memset
+#include <unistd.h>  // close
+
+#define ORDINATEUR "ordinateur"
 
 typedef Etat_torpille Tentatives[COLONNE_MAX][LIGNE_MAX];
 
@@ -15,7 +21,7 @@ static int nombre_aleatoire_entre_zero_et_dix( void ) {
    return (int)value;
 }
 
-static bool placer_un_navire( Jeu * ia, Etat prochain ) {
+static bool placer_un_navire( Jeu * ia, Etat_du_jeu prochain ) {
    TRACE( ia->journal, "Navire n°%d", ia->index_navire );
    Navire * navire     = ia->navires + ia->index_navire;
    navire->colonne     = nombre_aleatoire_entre_zero_et_dix();
@@ -41,12 +47,12 @@ static bool rechercher_a_l_horizontale( Jeu * ia, Tentatives tentatives, int * c
    TRACE( ia->journal, "colonne = %d, ligne = %d", *colonne, ligne);
    for( int c = *colonne; ( c >= 0 )&&( c < 10 ); c += sens ) {
       Etat_torpille e = tentatives[c][ligne];
-      if( e == Etat_torpille_Aucun ) {
+      if( e == et_Aucun ) {
          *colonne = c;
          TRACE( ia->journal, "L'extrémité n'est pas bordée en {%d, %d}, on le tente.", c, ligne );
          return true;
       }
-      if( e == Dans_l_eau ) {
+      if( e == et_Dans_l_eau ) {
          TRACE( ia->journal, "L'extrémité est bordée (dans l'eau), %s", "il faut chercher ailleurs." );
          return false;
       }
@@ -59,12 +65,12 @@ static bool rechercher_a_la_verticale( Jeu * ia, Tentatives tentatives, int colo
    TRACE( ia->journal, "colonne = %d, ligne = %d", colonne, *ligne);
    for( int l = *ligne; ( l >= 0 )&&( l < 10 ); l += sens ) {
       Etat_torpille e = tentatives[colonne][l];
-      if( e == Etat_torpille_Aucun ) {
+      if( e == et_Aucun ) {
          *ligne = l;
          TRACE( ia->journal, "L'extrémité n'est pas bordée en {%d, %d}, on le tente.", colonne, l );
          return true;
       }
-      if( e == Dans_l_eau ) {
+      if( e == et_Dans_l_eau ) {
          TRACE( ia->journal, "L'extrémité est bordée (dans l'eau), %s", "il faut chercher ailleurs." );
          return false;
       }
@@ -79,7 +85,7 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
    bool trouve  = false;
    for( int i = 0; ( ! trouve )&&( i < ia->index_torpille ); ++i ) {
       Torpille * t = ia->torpilles + i;
-      if( t->etat == Touche ) {
+      if( t->etat == et_Touche ) {
          for( int sens = -1; sens < 2; sens += 2 ) {
             if( t->colonne == 0 ) {
                sens = +1;
@@ -88,7 +94,7 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
                break;
             }
             Etat_torpille voisine = tentatives[t->colonne+sens][t->ligne];
-            if( voisine == Touche ) {
+            if( voisine == et_Touche ) {
                TRACE( ia->journal, "Une ligne horizontale se dessine en {%d, %d}, on doit vérifier l'extrémité %s",
                   t->colonne, t->ligne, ( sens < 0 ) ? "gauche" : "droite" );
                torpille->colonne = t->colonne;
@@ -105,7 +111,7 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
                   break;
                }
                Etat_torpille voisine = tentatives[t->colonne][t->ligne+sens];
-               if( voisine == Touche ) {
+               if( voisine == et_Touche ) {
                   TRACE( ia->journal, "Une ligne verticale se dessine en {%d, %d}, on doit vérifier l'extrémité %s",
                      t->colonne, t->ligne, ( sens < 0 ) ? "gauche" : "droite" );
                   torpille->colonne = t->colonne;
@@ -129,20 +135,20 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
          }
       }
    }
-   torpille->etat = Posee;
+   torpille->etat = et_Posee;
    int action[] = {
       torpille->colonne,
       torpille->ligne
    };
    if(   envoyer_message( ia, PROTOCOLE_TORPILLE_POSEE, action, sizeof( action ))
-      && lire_la_socket_et_le_clavier( ia, PROTOCOLE_DEGATS_OCCASIONNES, &torpille->etat, sizeof( torpille->etat ), 500 ))
+      && lire_la_socket( ia, PROTOCOLE_DEGATS_OCCASIONNES, &torpille->etat, sizeof( torpille->etat ), 500 ))
    {
       TRACE( ia->journal, "résultat : %s", etat_torpille_texte( torpille->etat ));
       tentatives[torpille->colonne][torpille->ligne] = torpille->etat;
       ++(ia->index_torpille);
       unsigned compteur_de_bateaux_coules = 0;
       for( int i = 0; i < ia->index_torpille; ++i ) {
-         if( ia->torpilles[i].etat == Coule ) {
+         if( ia->torpilles[i].etat == et_Coule ) {
             ++compteur_de_bateaux_coules;
          }
       }
@@ -194,14 +200,13 @@ static bool reflechir( Jeu ** jeux, Tentatives tentatives ) {
 
 static int retCode = 0;
 
-void * ia_main( void * context ) {
+static void * ia_main( void * context ) {
    Jeu ** jeux   = context;
    Jeu *  humain = jeux[0];
    Jeu *  ia     = jeux[1];
    ENTREE( ia->journal );
    Tentatives tentatives;
-   srand((unsigned int)heure_courante_en_ms());
-   if( ! initialiser_la_socket( ia )) {
+   if( ! initialiser_le_protocole( ia, false, DELAI_MAX_POUR_CONNECTER_LES_JOUEURS )) {
       ECHEC( ia->journal );
    }
    else {
@@ -217,12 +222,24 @@ void * ia_main( void * context ) {
             jouer( ia );
          }
       }
-#ifdef _WIN32
-      closesocket( ia->socket );
-#else
-      close( ia->socket );
-#endif
    }
-   fclose( ia->journal );
+   TRACE( ia->journal, "Fin du %s", "thread" );
    return &retCode;
+}
+
+BN_API bool initialiser_ia( Jeu ** jeux, const char * chemin_du_journal, pthread_t * thread ) {
+   Jeu * jeu = jeux[0];
+   Jeu * ia  = malloc( sizeof( Jeu ));
+   jeux[1] = ia;
+   initialiser( ia );
+   ia->est_une_ia = true;
+   snprintf( jeu->nom_de_l_adversaire, sizeof( jeu->nom_de_l_adversaire ), ORDINATEUR );
+   snprintf( ia ->nom_du_joueur      , sizeof( ia ->nom_du_joueur       ), ORDINATEUR );
+   snprintf( ia ->nom_de_l_adversaire, sizeof( ia ->nom_de_l_adversaire ), "%s", jeu->nom_du_joueur );
+   if( chemin_du_journal[0] ) {
+      char fullpath[PATH_MAX+30];
+      snprintf( fullpath, sizeof( fullpath ), "%s/ia.txt", chemin_du_journal );
+      ia->journal = fopen( fullpath, "wt" );
+   }
+   return CHECK_SYS( jeu, pthread_create( thread, NULL, ia_main, jeux ));
 }

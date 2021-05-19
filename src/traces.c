@@ -3,9 +3,8 @@
 #include "utils.h"
 
 #include <stdarg.h>
-#include <stdio.h>
 
-const char * etat_texte( Etat etat ) {
+BN_API const char * etat_jeu_texte( Etat_du_jeu etat ) {
    switch( etat ) {
    case Debut_du_programme              : return "Début du programme";
    case Placement_du_porte_avion        : return "Placement du porte-avion";
@@ -23,7 +22,7 @@ const char * etat_texte( Etat etat ) {
    }
 }
 
-const char * action_texte( Action action ) {
+BN_API const char * action_texte( Action action ) {
    switch( action ) {
    case Aucune : return "Aucune";
    case Jouer  : return "Jouer";
@@ -33,18 +32,28 @@ const char * action_texte( Action action ) {
    }
 }
 
-const char * etat_torpille_texte( Etat_torpille etat ) {
+BN_API const char * etat_torpille_texte( Etat_torpille etat ) {
    switch( etat ) {
-   case Etat_torpille_Aucun: return "Pose en cours";
-   case Posee        : return "Posée";
-   case Dans_l_eau   : return "Dans l'eau";
-   case Touche       : return "Touché";
-   case Coule        : return "Coulé";
+   case et_Aucun     : return "Pose en cours";
+   case et_Posee     : return "Posée";
+   case et_Dans_l_eau: return "Dans l'eau";
+   case et_Touche    : return "Touché";
+   case et_Coule     : return "Coulé";
    default           : return "???";
    }
 }
 
-const char * entete_texte( Entete entete ) {
+BN_API const char * etat_navire_texte( Etat_navire etat ) {
+   switch( etat ) {
+   case en_Aucun : return "Placement en cours";
+   case en_Place : return "Placé et indemne";
+   case en_Touche: return "Touché";
+   case en_Coule : return "Coulé";
+   default       : return "???";
+   }
+}
+
+BN_API const char * entete_texte( Entete entete ) {
    switch( entete ) {
    case PROTOCOLE_AUCUN             : return "Aucun";
    case PROTOCOLE_POIGNEE_DE_MAIN   : return "Poignée de main";
@@ -85,7 +94,7 @@ void dump( Jeu * jeu ) {
    }
 }
 
-void ajouter_une_entree_au_journal(
+BN_API void ajouter_une_entree_au_journal(
    FILE *       journal,
    const char * fichier,
    int          ligne,

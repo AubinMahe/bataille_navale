@@ -3,16 +3,17 @@
 #include "bataille_navale.h"
 #include "protocole.h"
 
-void initialiser_journal( Jeu * jeu, const char * chemin_du_journal );
+BN_API void initialiser_journal( Jeu * jeu, const char * chemin_du_journal );
 
-const char * etat_texte         ( Etat etat );
-const char * action_texte       ( Action action );
-const char * etat_torpille_texte( Etat_torpille etat );
-const char * entete_texte       ( Entete entete );
+BN_API const char * etat_jeu_texte     ( Etat_du_jeu          etat   );
+BN_API const char * action_texte       ( Action        action );
+BN_API const char * etat_torpille_texte( Etat_torpille etat   );
+BN_API const char * etat_navire_texte  ( Etat_navire   etat );
+BN_API const char * entete_texte       ( Entete        entete );
 
 void dump( Jeu * jeu );
 
-void ajouter_une_entree_au_journal(
+BN_API void ajouter_une_entree_au_journal(
    FILE *       journal,
    const char * fichier,
    int          ligne,

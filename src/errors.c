@@ -1,11 +1,11 @@
 #include "errors.h"
+
 #include "traces.h"
 
-#include <errno.h>
-#include <stdio.h>
-#include <string.h>
+#include <errno.h>   // errno
+#include <string.h>  // strerror
 
-bool check_syscall( Jeu * jeu, const char * file, int line, const char * function, const char * call, ssize_t retCode ) {
+BN_API bool check_syscall( Jeu * jeu, const char * file, int line, const char * function, const char * call, ssize_t retCode ) {
    if( retCode < 0 ) {
       ajouter_une_entree_au_journal( jeu->journal, file, line, function, "%s: %s", call, strerror( errno ));
       jeu->action = Quitter;

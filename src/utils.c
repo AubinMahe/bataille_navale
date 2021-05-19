@@ -19,6 +19,7 @@ void sleep_ms( uint64_t ms ) {
 #else
 #  include <stdlib.h> // NULL
 #  include <time.h>   // nanosleep
+#  include <unistd.h> // getpid()
 
 uint64_t heure_courante_en_ms( void ) {
    struct timeval tv;
@@ -51,3 +52,7 @@ int pthread_join( pthread_t id, void ** not_used ) {
 }
 
 #endif
+
+void initialiser_le_generateur_de_nombre_aleatoire( void ) {
+   srand((unsigned)(((unsigned)getpid()) * heure_courante_en_ms()));
+}
