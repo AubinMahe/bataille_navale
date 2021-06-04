@@ -15,8 +15,8 @@
 
 typedef Etat_torpille Tentatives[COLONNE_MAX][LIGNE_MAX];
 
-static int nombre_aleatoire_entre_zero_et_dix( void ) {
-   double value = 10.0 * rand();
+static int nombre_aleatoire_entre_zero_et( double max ) {
+   double value = max * rand();
    value /= RAND_MAX;
    return (int)value;
 }
@@ -24,13 +24,13 @@ static int nombre_aleatoire_entre_zero_et_dix( void ) {
 static bool placer_un_navire( Jeu * ia, Etat_du_jeu prochain ) {
    TRACE( ia->journal, "Navire n°%d", ia->index_navire );
    Navire * navire     = ia->navires + ia->index_navire;
-   navire->colonne     = nombre_aleatoire_entre_zero_et_dix();
-   navire->ligne       = nombre_aleatoire_entre_zero_et_dix();
+   navire->colonne     = nombre_aleatoire_entre_zero_et( COLONNE_MAX );
+   navire->ligne       = nombre_aleatoire_entre_zero_et( LIGNE_MAX );
    navire->orientation = rand() > RAND_MAX/2;
    unsigned interruption_de_boucle_infinie = 0;
    while( ! controler_le_placement_du_navire( ia )) {
-      navire->colonne     = nombre_aleatoire_entre_zero_et_dix();
-      navire->ligne       = nombre_aleatoire_entre_zero_et_dix();
+      navire->colonne     = nombre_aleatoire_entre_zero_et( COLONNE_MAX );
+      navire->ligne       = nombre_aleatoire_entre_zero_et( LIGNE_MAX );
       navire->orientation = rand() > RAND_MAX/2;
       if( ++interruption_de_boucle_infinie > 100 ) {
          return false;
@@ -45,7 +45,7 @@ static bool placer_un_navire( Jeu * ia, Etat_du_jeu prochain ) {
 
 static bool rechercher_a_l_horizontale( Jeu * ia, Tentatives tentatives, int * colonne, int ligne, int sens ) {
    TRACE( ia->journal, "colonne = %d, ligne = %d", *colonne, ligne);
-   for( int c = *colonne; ( c >= 0 )&&( c < 10 ); c += sens ) {
+   for( int c = *colonne; ( c >= 0 )&&( c < COLONNE_MAX ); c += sens ) {
       Etat_torpille e = tentatives[c][ligne];
       if( e == et_Aucun ) {
          *colonne = c;
@@ -63,7 +63,7 @@ static bool rechercher_a_l_horizontale( Jeu * ia, Tentatives tentatives, int * c
 
 static bool rechercher_a_la_verticale( Jeu * ia, Tentatives tentatives, int colonne, int * ligne, int sens ) {
    TRACE( ia->journal, "colonne = %d, ligne = %d", colonne, *ligne);
-   for( int l = *ligne; ( l >= 0 )&&( l < 10 ); l += sens ) {
+   for( int l = *ligne; ( l >= 0 )&&( l < LIGNE_MAX ); l += sens ) {
       Etat_torpille e = tentatives[colonne][l];
       if( e == et_Aucun ) {
          *ligne = l;
@@ -79,10 +79,9 @@ static bool rechercher_a_la_verticale( Jeu * ia, Tentatives tentatives, int colo
    return false;
 }
 
-static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
+static bool cherche_une_ligne( Jeu * ia, Tentatives tentatives, Torpille * torpille  ) {
    ENTREE( ia->journal );
-   Torpille * torpille = ia->torpilles + ia->index_torpille;
-   bool trouve  = false;
+   bool trouve = false;
    for( int i = 0; ( ! trouve )&&( i < ia->index_torpille ); ++i ) {
       Torpille * t = ia->torpilles + i;
       if( t->etat == et_Touche ) {
@@ -90,7 +89,7 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
             if( t->colonne == 0 ) {
                sens = +1;
             }
-            if( t->colonne == 9 ) {
+            if( t->colonne == COLONNE_MAX - 1 ) {
                break;
             }
             Etat_torpille voisine = tentatives[t->colonne+sens][t->ligne];
@@ -107,7 +106,7 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
                if( t->ligne == 0 ) {
                   sens = +1;
                }
-               if( t->ligne == 9 ) {
+               if( t->ligne == LIGNE_MAX - 1 ) {
                   break;
                }
                Etat_torpille voisine = tentatives[t->colonne][t->ligne+sens];
@@ -122,15 +121,101 @@ static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
          }
       }
    }
+   return trouve;
+}
+
+static bool cherche_a_gauche( Jeu * ia, Tentatives tentatives, Torpille * touche, Torpille * torpille ) {
+   ENTREE( ia->journal );
+   if(( touche->colonne > 0 )&&( tentatives[touche->colonne-1][touche->ligne] == et_Aucun )) {
+      torpille->colonne = touche->colonne - 1;
+      torpille->ligne   = touche->ligne;
+      return true;
+   }
+   return false;
+}
+
+static bool cherche_a_droite( Jeu * ia, Tentatives tentatives, Torpille * touche, Torpille * torpille ) {
+   ENTREE( ia->journal );
+   if(( touche->colonne < COLONNE_MAX - 1 )&&( tentatives[touche->colonne+1][touche->ligne] == et_Aucun )) {
+      torpille->colonne = touche->colonne + 1;
+      torpille->ligne   = touche->ligne;
+      return true;
+   }
+   return false;
+}
+
+static bool cherche_en_haut( Jeu * ia, Tentatives tentatives, Torpille * touche, Torpille * torpille ) {
+   ENTREE( ia->journal );
+   if(( touche->ligne > 0 )&&( tentatives[touche->colonne][touche->ligne-1] == et_Aucun )) {
+      torpille->colonne = touche->colonne;
+      torpille->ligne   = touche->ligne - 1;
+      return true;
+   }
+   return false;
+}
+
+
+static bool cherche_en_bas( Jeu * ia, Tentatives tentatives, Torpille * touche, Torpille * torpille ) {
+   ENTREE( ia->journal );
+   if(( touche->ligne < LIGNE_MAX - 1 )&&( tentatives[touche->colonne][touche->ligne+1] == et_Aucun )) {
+      torpille->colonne = touche->colonne;
+      torpille->ligne   = touche->ligne + 1;
+      return true;
+   }
+   return false;
+}
+
+typedef bool ( * cherche_autour_t )( Jeu * ia, Tentatives tentatives, Torpille * touche, Torpille * torpille );
+
+static cherche_autour_t cherche_autour[] = {
+   cherche_a_gauche,
+   cherche_a_droite,
+   cherche_en_haut,
+   cherche_en_bas
+};
+
+static bool cherche_un_bateau_touche( Jeu * ia, Tentatives tentatives, Torpille * torpille ) {
+   ENTREE( ia->journal );
+   bool trouve = false;
+   for( int i = 0; ( ! trouve )&&( i < ia->index_torpille ); ++i ) {
+      Torpille * t = ia->torpilles + i;
+      if( t->etat == et_Touche ) {
+         int essais = 0;
+         // Tente de placer une mine autour du point "t" dans un ordre aléatoire
+         while(( essais != 0x0F )&&( ! trouve )) {
+            int index = nombre_aleatoire_entre_zero_et( 4 );
+            trouve = cherche_autour[index]( ia, tentatives, t, torpille );
+            essais = essais | ( 1 << index );
+         }
+      }
+   }
+   return trouve;
+}
+
+static bool placer_la_torpille_au_hasard( Jeu * ia, Torpille * torpille ) {
+   ENTREE( ia->journal );
+   torpille->colonne = nombre_aleatoire_entre_zero_et( COLONNE_MAX );
+   torpille->ligne   = nombre_aleatoire_entre_zero_et( LIGNE_MAX );
+   unsigned interruption_de_boucle_infinie = 0;
+   while( ! controler_le_placement_de_la_torpille( ia )) {
+      torpille->colonne = nombre_aleatoire_entre_zero_et( COLONNE_MAX );
+      torpille->ligne   = nombre_aleatoire_entre_zero_et( LIGNE_MAX );
+      if( ++interruption_de_boucle_infinie > 100 ) {
+         return false;
+      }
+   }
+   return true;
+}
+
+static bool placer_une_torpille( Jeu * ia, Tentatives tentatives ) {
+   ENTREE( ia->journal );
+   Torpille * torpille = ia->torpilles + ia->index_torpille;
+   bool trouve = cherche_une_ligne( ia, tentatives, torpille );
    if( ! trouve ) {
-      TRACE( ia->journal, "Aucune ligne ne se dessine, on tire au %s", "sort" );
-      torpille->colonne = nombre_aleatoire_entre_zero_et_dix();
-      torpille->ligne   = nombre_aleatoire_entre_zero_et_dix();
-      unsigned interruption_de_boucle_infinie = 0;
-      while( ! controler_le_placement_de_la_torpille( ia )) {
-         torpille->colonne = nombre_aleatoire_entre_zero_et_dix();
-         torpille->ligne   = nombre_aleatoire_entre_zero_et_dix();
-         if( ++interruption_de_boucle_infinie > 100 ) {
+      trouve = cherche_un_bateau_touche( ia, tentatives, torpille );
+      if( ! trouve ) {
+         trouve = placer_la_torpille_au_hasard( ia, torpille );
+         if( ! trouve ) {
             return false;
          }
       }

@@ -3,6 +3,7 @@
 #include "utils.h"
 
 #include <stdarg.h>
+#include <string.h>
 
 BN_API const char * etat_jeu_texte( Etat_du_jeu etat ) {
    switch( etat ) {
@@ -93,6 +94,56 @@ void dump( Jeu * jeu ) {
       dump_torpille( jeu, i );
    }
 }
+static void dump_line(
+   FILE *       journal,
+   const char * fichier,
+   int          ligne,
+   const char * fonction,
+   char *       hexa,
+   const char * ascii )
+{
+   hexa = strcat( hexa, "                                                                          " );
+   hexa[6+( 3*8 )+2+( 3*8 )] = '\0';
+   ajouter_une_entree_au_journal( journal, fichier, ligne, fonction, "%s - %s", hexa, ascii );
+}
+
+BN_API void dump_hexa(
+   FILE *       journal,
+   const char * fichier,
+   int          ligne,
+   const char * fonction,
+   const char * octets,
+   size_t       taille )
+{
+   char   hexStr[200];
+   char   addStr[200];
+   char   hexa  [200];
+   char   ascii [200];
+   memset( hexStr, 0, sizeof( hexStr ));
+   memset( addStr, 0, sizeof( addStr ));
+   memset( hexa  , 0, sizeof( hexa   ));
+   memset( ascii , 0, sizeof( ascii  ));
+   for( size_t i = 0; i < taille; ++i ) {
+      char c = octets[i];
+      if(( i % 16 ) == 0 ) {
+         if( i > 0 ) {
+            dump_line( journal, fichier, ligne, fonction, strcat( addStr, hexa ), ascii );
+            memset( hexa , 0, sizeof( hexa  ));
+            memset( ascii, 0, sizeof( ascii ));
+         }
+         snprintf( addStr, sizeof( addStr ), "%04X:", (unsigned int)i );
+      }
+      else if(( i % 8 ) == 0 ) {
+         strcat( hexa, " -" );
+      }
+      sprintf( hexStr, " %02X", (unsigned char)c );
+      strcat( hexa, hexStr );
+      ascii[strlen(ascii)] = (( c > 32 ) && ( c < 127 )) ? (char)c : '.';
+   }
+   if( hexa[0] ) {
+      dump_line( journal, fichier, ligne, fonction, strcat( addStr, hexa ), ascii );
+   }
+}
 
 BN_API void ajouter_une_entree_au_journal(
    FILE *       journal,
@@ -106,6 +157,7 @@ BN_API void ajouter_une_entree_au_journal(
    char buffer[200];
    vsnprintf( buffer, sizeof( buffer ), format, args );
    va_end( args );
-   fprintf( journal, "%6"FMT_SIZE_T"u:%"FMT_SIZE_T"u:%s:%d:%s|%s\n", heure_courante_en_ms(), (uint64_t)pthread_self(), fichier, ligne, fonction, buffer );
+   fprintf( journal, "%6"FMT_SIZE_T"u:%"FMT_SIZE_T"u:%s:%d:%s|%s\n",
+      heure_courante_en_ms(), (uint64_t)pthread_self(), fichier, ligne, fonction, strtok( buffer, "\n\r" ));
    fflush( journal );
 }

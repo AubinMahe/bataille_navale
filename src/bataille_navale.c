@@ -46,6 +46,7 @@ BN_API void initialiser_le_journal( Jeu * jeu, const char * chemin_du_journal ) 
       char fullpath[PATH_MAX+21+21];
       snprintf( fullpath, sizeof( fullpath ), "%s/%s.txt", chemin_du_journal, jeu->nom_du_joueur );
       jeu->journal = fopen( fullpath, "wt" );
+      ENTREE( jeu->journal );
    }
 }
 

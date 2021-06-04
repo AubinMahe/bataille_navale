@@ -11,14 +11,15 @@
 #include <unistd.h>  // close()
 
 bool envoyer_message( Jeu * jeu, Entete entete, const void * corps, size_t taille_du_corps ) {
-   TRACE( jeu->journal, "%s", entete_texte( entete ));
+   TRACE( jeu->journal, "%s, taille : %d", entete_texte( entete ), taille_du_corps );
+   DUMP_HEXA( jeu->journal, corps, taille_du_corps );
    size_t taille = 1 + taille_du_corps + 1;
    char * message = malloc( taille );
    *message = (char)entete;
    memcpy( message+1, corps, taille_du_corps );
    ssize_t retCode;
    bool ok = CHECK_SYS( jeu, retCode = send( jeu->socket, message, taille, 0 ))
-      &&  CHECK_VAL( jeu, retCode, taille );
+      &&     CHECK_VAL( jeu, retCode, taille );
    free( message );
    return ok;
 }
@@ -71,8 +72,9 @@ bool requete_reponse(
                }
             }
             else {
+               CHECK_SYS( jeu, -1 );
                free( message );
-               return CHECK_SYS( jeu, -1 );
+               return false;
             }
          }
          else {
@@ -103,8 +105,9 @@ bool lire_la_socket( Jeu * jeu, Entete entete, void * corps, size_t taille_du_co
       ssize_t retCode = recv( jeu->socket, message, taille, 0 );
       if( retCode < 0 ) {
          if( errno != EAGAIN ) {
+            CHECK_SYS( jeu, -1 );
             free( message );
-            return CHECK_SYS( jeu, -1 );
+            return false;
          }
       }
       else if((Entete)message[0] == entete ) {
@@ -238,23 +241,29 @@ BN_API bool initialiser_le_protocole( Jeu * jeu, bool l_adversaire_est_l_ordinat
                   }
                }
                else {
-                  ECHEC( jeu->journal );
-                  return CHECK_SYS( jeu, -1 );
+                  CHECK_SYS( jeu, -1 );
+                  return false;
                }
             }
             else {
                encore = ( message[0] != PROTOCOLE_POIGNEE_DE_MAIN )&&( jeu->etat != Fin_du_programme );
-               snprintf( jeu->nom_de_l_adversaire, sizeof( jeu->nom_de_l_adversaire ), "%s", message + 1 );
                TRACE( jeu->journal, "réponse reçue (%"FMT_SIZE_T"d octet%s) : %s",
                   retCode, ( retCode > 1 ) ? "s" : "", entete_texte( message[0] ));
+               if( encore ) {
+                  DUMP_HEXA( jeu->journal, message, (size_t)retCode );
+               }
+               else if( message[0] == PROTOCOLE_POIGNEE_DE_MAIN ) {
+                  snprintf( jeu->nom_de_l_adversaire, sizeof( jeu->nom_de_l_adversaire ), "%s", message + 1 );
+               }
             }
          }
          else {
             encore = false;
          }
       } while( encore );
-      TRACE( jeu->journal, "return %s", ( retCode > 0 ) ? "true" : "false" );
-      return ( retCode > 0 );
+      encore = ( retCode > 0 )&&( jeu->etat != Fin_du_programme );
+      TRACE( jeu->journal, "return %s", encore  ? "true" : "false" );
+      return encore;
    }
    ECHEC( jeu->journal );
    return false;

@@ -12,9 +12,10 @@
 #define COULEUR_BATEAU_PLACE        2
 #define COULEUR_BATEAU_TOUCHE       3
 #define COULEUR_BATEAU_COULE        4
-#define COULEUR_TORPILLE_DANS_L_EAU 5
-#define COULEUR_TORPILLE_A_TOUCHE   6
-#define COULEUR_TORPILLE_A_COULE    7
+#define COULEUR_TORPILLE_NON_PLACEE 5
+#define COULEUR_TORPILLE_DANS_L_EAU 6
+#define COULEUR_TORPILLE_A_TOUCHE   7
+#define COULEUR_TORPILLE_A_COULE    8
 
 static Jeu ** ctrl_c_handler_context;
 
@@ -33,7 +34,7 @@ static bool echap_est_presse( void ) {
    return getch() == TOUCHE_ECHAP;
 }
 
-void initialiser_l_ihm( Jeu ** jeux ) {
+bool initialiser_l_ihm( Jeu ** jeux ) {
    ENTREE( jeux[0]->journal );
    ctrl_c_handler_context = jeux;
    signal( SIGINT, &ctrl_c_handler );
@@ -49,6 +50,7 @@ void initialiser_l_ihm( Jeu ** jeux ) {
    init_pair( COULEUR_BATEAU_PLACE       , COLOR_BLUE  , COLOR_BLACK );
    init_pair( COULEUR_BATEAU_TOUCHE      , COLOR_YELLOW, COLOR_BLACK );
    init_pair( COULEUR_BATEAU_COULE       , COLOR_RED   , COLOR_BLACK );
+   init_pair( COULEUR_TORPILLE_NON_PLACEE, COLOR_WHITE , COLOR_BLACK );
    init_pair( COULEUR_TORPILLE_DANS_L_EAU, COLOR_BLUE  , COLOR_BLACK );
    init_pair( COULEUR_TORPILLE_A_TOUCHE  , COLOR_YELLOW, COLOR_BLACK );
    init_pair( COULEUR_TORPILLE_A_COULE   , COLOR_RED   , COLOR_BLACK );
@@ -59,6 +61,7 @@ void initialiser_l_ihm( Jeu ** jeux ) {
    mvaddstr( 11, (84 - (int)strlen( message )) / 2, message );
    attroff( A_BOLD );
    refresh();
+   return true;
 }
 
 static chtype valeur_de_la_cellule( const Jeu * jeu, int x, int y, const Navire ** pNavire, const Torpille ** pTorpille ) {
@@ -113,7 +116,7 @@ static chtype valeur_de_la_cellule( const Jeu * jeu, int x, int y, const Navire 
    return ACS_HLINE;
 }
 
-static int couleur_navire( const Navire * navire, int index ) {
+static int couleur_du_navire( const Navire * navire, int index ) {
    switch( navire->etat ) {
    default:
    case en_Aucun : return COULEUR_BATEAU_NON_PLACE;
@@ -164,7 +167,7 @@ static void dessiner_le_navire( const Jeu * jeu, const Navire * navire, int offs
    int x = 2 + offset_colonne + 4 * navire->colonne;
    if( navire->orientation == Verticale ) {
       for( int i = 0; i < navire->taille; ++i ) {
-         int couleur = couleur_navire( navire, i );
+         int couleur = couleur_du_navire( navire, i );
          attron( COLOR_PAIR( couleur ));
          mvaddch( y + 2*i, x, ACS_CKBOARD );
          if( i != navire->taille - 1 ) {
@@ -175,7 +178,7 @@ static void dessiner_le_navire( const Jeu * jeu, const Navire * navire, int offs
    }
    else {
       for( int i = 0; i < navire->taille; ++i ) {
-         int couleur = couleur_navire( navire, i );
+         int couleur = couleur_du_navire( navire, i );
          attron( COLOR_PAIR( couleur ));
          if( i ) {
             mvaddch( y, x + 4*i - 1, ACS_CKBOARD );
@@ -190,22 +193,23 @@ static void dessiner_le_navire( const Jeu * jeu, const Navire * navire, int offs
    }
 }
 
+static int couleur_de_la_torpille( const Torpille * torpille ) {
+   switch( torpille->etat ) {
+   default:
+   case et_Aucun     : return COULEUR_TORPILLE_NON_PLACEE;
+   case et_Dans_l_eau: return COULEUR_TORPILLE_DANS_L_EAU;
+   case et_Touche    : return COULEUR_TORPILLE_A_TOUCHE;
+   case et_Coule     : return COULEUR_TORPILLE_A_COULE;
+   }
+}
+
 static void dessiner_la_torpille( const Jeu * jeu, const Torpille * torpille ) {
    int y = jeu->haut_de_la_grille   + 2 * torpille->ligne;
    int x = 43 + 4 * torpille->colonne;
-   switch( torpille->etat ) {
-   case et_Dans_l_eau: attron( COLOR_PAIR( COULEUR_TORPILLE_DANS_L_EAU )); break;
-   case et_Touche    : attron( COLOR_PAIR( COULEUR_TORPILLE_A_TOUCHE ));   break;
-   case et_Coule     : attron( COLOR_PAIR( COULEUR_TORPILLE_A_COULE ));    break;
-   default: break;
-   }
+   int c = couleur_de_la_torpille( torpille );
+   attron( COLOR_PAIR( c  ));
    mvaddch( y, x, ACS_DIAMOND );
-   switch( torpille->etat ) {
-   case et_Dans_l_eau: attroff( COLOR_PAIR( COULEUR_TORPILLE_DANS_L_EAU )); break;
-   case et_Touche    : attroff( COLOR_PAIR( COULEUR_TORPILLE_A_TOUCHE ));   break;
-   case et_Coule     : attroff( COLOR_PAIR( COULEUR_TORPILLE_A_COULE ));    break;
-   default: break;
-   }
+   attroff( COLOR_PAIR( c ));
 }
 
 static void effacer_la_torpille( const Jeu * jeu, const Torpille * torpille ) {

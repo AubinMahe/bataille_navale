@@ -7,7 +7,8 @@
 
 BN_API bool check_syscall( Jeu * jeu, const char * file, int line, const char * function, const char * call, ssize_t retCode ) {
    if( retCode < 0 ) {
-      ajouter_une_entree_au_journal( jeu->journal, file, line, function, "%s: %s", call, strerror( errno ));
+      const char * err_msg = strerror( errno );
+      ajouter_une_entree_au_journal( jeu->journal, file, line, function, "%s: %s", call, err_msg );
       jeu->action = Quitter;
       jeu->etat   = Fin_du_programme;
       return false;

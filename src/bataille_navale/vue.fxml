@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.control.cell.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+<?import javafx.scene.web.*?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.HBox?>
+
+<BorderPane xmlns:fx="http://javafx.com/fxml" fx:controller="com.thalesgroup.dms.spad.BSDMRefCtrl">
+   <center>
+      <VBox spacing="4.0">
+         <HBox>
+            <Label text="0" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Descripteur de volume : " />
+            <Label fx:id="_magic" styleClass="border" />
+            <Label fx:id="_adresseDuDictionnaireDeRequetes" styleClass="border">
+               <tooltip><Tooltip text="Adresse de la table des entrées du dictionnaire de requêtes" /></tooltip>
+            </Label>
+            <Label fx:id="_nombreDEntreesDuDictionnaireDeRequetes" styleClass="border">
+               <tooltip><Tooltip text="Nombre d’entrées de la table des entrées du dictionnaire de requêtes" /></tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="L'adresse, en octet, de la partition système, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="La taille, en octet, de la partition système, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="L'adresse, en octet, de la partition utilisateur, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="La taille, en octet, de la partition utilisateur, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_capaciteMemoireDuVolume" styleClass="border">
+               <tooltip><Tooltip text="La capacité mémoire du volume, en octet" /></tooltip>
+            </Label>
+            <Label fx:id="_versionDuChargeur" styleClass="border">
+               <tooltip><Tooltip text="Identifiant de l’outil de chargement, selon le format version.génération.édition" /></tooltip>
+            </Label>
+            <Label fx:id="_versionDuCompilateur" styleClass="border">
+               <tooltip><Tooltip text="Identifiant du compilateur, selon le format version.génération.édition" /></tooltip>
+            </Label>
+            <Label fx:id="_versionDuDictionnaire" styleClass="border">
+               <tooltip><Tooltip text="Identifiant dictionnaire de requêtes, selon le format version.génération.édition" /></tooltip>
+            </Label>
+            <Label fx:id="_nomDuVolume" styleClass="border">
+               <tooltip><Tooltip text="Le nom du volume, sur 12 caractères." /></tooltip>
+            </Label>
+         </HBox>
+         <HBox>
+            <Label text="51" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Table des entrées du dictionnaire de requêtes : " />
+            <Label fx:id="_checksumDuFichier" styleClass="border">
+               <tooltip><Tooltip text="Checksum du fichier BSDM.ref" /></tooltip>
+            </Label>
+            <Label fx:id="_request01Address" styleClass="border">
+               <tooltip><Tooltip text="55 : Adresse du descripteur de requête 1" /></tooltip>
+            </Label>
+            <Label fx:id="_request02Address" styleClass="border">
+               <tooltip><Tooltip text="59 : Adresse du descripteur de requête 2" /></tooltip>
+            </Label>
+            <Label fx:id="_request03Address" styleClass="border">
+               <tooltip><Tooltip text="63 : Adresse du descripteur de requête 3" /></tooltip>
+            </Label>
+            <Label fx:id="_request04Address" styleClass="border">
+               <tooltip><Tooltip text="67 : Adresse du descripteur de requête 4" /></tooltip>
+            </Label>
+            <Label fx:id="_request05Address" styleClass="border">
+               <tooltip><Tooltip text="71 : Adresse du descripteur de requête 5" /></tooltip>
+            </Label>
+            <Label fx:id="_request06Address" styleClass="border">
+               <tooltip><Tooltip text="75 : Adresse du descripteur de requête 6" /></tooltip>
+            </Label>
+            <Label fx:id="_request07Address" styleClass="border">
+               <tooltip><Tooltip text="79 : Adresse du descripteur de requête 7" /></tooltip>
+            </Label>
+            <Label fx:id="_request08Address" styleClass="border">
+               <tooltip><Tooltip text="83 : Adresse du descripteur de requête 8" /></tooltip>
+            </Label>
+            <Label fx:id="_request09Address" styleClass="border">
+               <tooltip><Tooltip text="87 : Adresse du descripteur de requête 9" /></tooltip>
+            </Label>
+            <Label fx:id="_request10Address" styleClass="border">
+               <tooltip><Tooltip text="91 : Adresse du descripteur de requête 10" /></tooltip>
+            </Label>
+         </HBox>
+         <HBox>
+            <Label fx:id="_adresseDuSuperBloc" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Descripteur du système d'objet ou Super-Bloc : " />
+            <Label text="FFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Nombre total de blocs mémoire, champ non utilisé forcé à 0xFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Nombre de blocs libres, champ non utilisé forcé à 0xFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Tête de liste des blocs libres, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Etat du système d’objets, champ non utilisé forcé à 0xFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_teteDeListeDesBlocsMemoireContenantLesRequetesSurFichier" styleClass="border">
+               <tooltip><Tooltip text="Tête de liste des blocs mémoire contenant les requêtes sur fichier" /></tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Queue de liste des en-têtes de requête sur fichier, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Adresse de fin d’occupation du dernier bloc contenant les requêtes sur fichier, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_teteDeListeDesBlocsMemoireContenantLesRequetesSurTable" styleClass="border">
+               <tooltip><Tooltip text="Tête de liste des blocs mémoire contenant les requêtes sur table" /></tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Queue de liste des en-têtes de requête sur table, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Adresse de fin d’occupation du dernier bloc contenant les requêtes sur table champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_teteDeListeDesBlocsMemoireContenantLesDescripteursDeFichier" styleClass="border">
+               <tooltip><Tooltip text="Tête de liste des blocs mémoire contenant les descripteurs de fichier" /></tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Queue de liste des blocs mémoire contenant les descripteurs de fichier, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Adresse de fin d’occupation du dernier blocs mémoire contenant les descripteurs de fichier, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_teteDeListeDesBlocsMemoireContenantLesDescripteursDeTable" styleClass="border">
+               <tooltip><Tooltip text="Tête de liste des blocs mémoire contenant les descripteurs de table" /></tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Queue de liste des blocs mémoire contenant les descripteurs de table, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Adresse de fin d’occupation du dernier blocs mémoire contenant les descripteurs de table, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+         </HBox>
+         <HBox>
+            <Label fx:id="_adresseDuPremierDescripteurDeRequeteSurFichier" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Descripteurs de requête sur fichier : " />
+            <Label fx:id="_codeFonctionEmettriceFichier" styleClass="border">
+               <tooltip><Tooltip text="Code de la fonction émettrice" /></tooltip>
+            </Label>
+            <Label fx:id="_coefficientDePrioriteDeLaRequeteFichier" styleClass="border">
+               <tooltip><Tooltip text="Coefficient de priorité de la requête" /></tooltip>
+            </Label>
+            <Label fx:id="_objetAccedeFichier" styleClass="border">
+               <tooltip><Tooltip text="Type de l'objet accédé : 0 = fichier, 1 = table" /></tooltip>
+            </Label>
+            <Label fx:id="_typeDAccesFichier" styleClass="border">
+               <tooltip><Tooltip text="Type d'accès : 0 = lecture, 1 = insertion, 2 = mise à jour, 3 = suppression" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuSuperBlocDeLaRequeteFichier" styleClass="border">
+               <tooltip><Tooltip text="Adresse du super bloc" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuDescripteurDeLObjetFichier" styleClass="border">
+               <tooltip><Tooltip text="Adresse du descripteur de l’objet accédé" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuBlocDeDonneesComplementaireFichier" styleClass="border">
+               <tooltip><Tooltip text="Adresse du bloc de données complémentaires" /></tooltip>
+            </Label>
+            <Label fx:id="_numeroDeRequeteFichier" styleClass="border">
+               <tooltip><Tooltip text="Identifiant de la requête" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDeLaSecondeRequeteSurFichier" styleClass="border">
+               <tooltip><Tooltip text="Adresse du descripteur de requête suivant" /></tooltip>
+            </Label>
+         </HBox>
+         <HBox>
+            <Label fx:id="_adresseDuPremierDescripteurDeRequeteSurTable" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Descripteurs de requête sur table : " />
+            <Label fx:id="_codeFonctionEmettriceTable" styleClass="border">
+               <tooltip><Tooltip text="Code de la fonction émettrice" /></tooltip>
+            </Label>
+            <Label fx:id="_coefficientDePrioriteDeLaRequeteTable" styleClass="border">
+               <tooltip><Tooltip text="Coefficient de priorité de la requête" /></tooltip>
+            </Label>
+            <Label fx:id="_objetAccedeTable" styleClass="border">
+               <tooltip><Tooltip text="Type de l'objet accédé : 0 = fichier, 1 = table" /></tooltip>
+            </Label>
+            <Label fx:id="_typeDAccesTable" styleClass="border">
+               <tooltip><Tooltip text="Type d'accès : 0 = lecture, 1 = insertion, 2 = mise à jour, 3 = suppression" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuSuperBlocDeLaRequeteTable" styleClass="border">
+               <tooltip><Tooltip text="Adresse du super bloc" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuDescripteurDeLObjetTable" styleClass="border">
+               <tooltip><Tooltip text="Adresse du descripteur de l’objet accédé" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuBlocDeDonneesComplementaireTable" styleClass="border">
+               <tooltip><Tooltip text="Adresse du bloc de données complémentaires" /></tooltip>
+            </Label>
+            <Label fx:id="_numeroDeRequeteTable" styleClass="border">
+               <tooltip><Tooltip text="Identifiant de la requête" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDeLaSecondeRequeteSurTable" styleClass="border">
+               <tooltip><Tooltip text="Adresse du descripteur de requête suivant" /></tooltip>
+            </Label>
+         </HBox>
+         <HBox>
+            <Label fx:id="_adresseDuPremierDescripteurDeFichier" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Descripteurs de fichier : " />
+            <Label text="77 x FF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Champs non utilisé forcé à 0xFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_nomDuFichier00" styleClass="border">
+               <tooltip><Tooltip text="Nom du fichier" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuSecondDescripteurDeFichier" styleClass="border">
+               <tooltip><Tooltip text="Adresse du descripteur de fichier suivant" /></tooltip>
+            </Label>
+         </HBox>
+         <HBox>
+            <Label fx:id="_adresseDuPremierDescripteurDeTable" prefWidth="64" textAlignment="RIGHT"/>
+            <Label text="Descripteurs de table : " />
+            <Label fx:id="_tailleDUneLigne" styleClass="border">
+               <tooltip><Tooltip text="Taille d’une ligne, en octet" /></tooltip>
+            </Label>
+            <Label text="FFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Nombre de blocs de données client, champ non utilisé forcé à 0xFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Tête de liste des blocs de données client, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Queue de liste des blocs de données client, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label text="FFFFFFFF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Offset de fin d’occupation du dernier bloc de données client, champ non utilisé forcé à 0xFFFFFFFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_teteDeListeDesDescripteursDIndex" styleClass="border">
+               <tooltip><Tooltip text="Tête de liste des descripteurs d’index" /></tooltip>
+            </Label>
+            <Label text="FF" styleClass="border">
+               <tooltip>
+                  <Tooltip text="Etat de la table, champ non utilisé forcé à 0xFF" />
+               </tooltip>
+            </Label>
+            <Label fx:id="_nomDeLaTable00" styleClass="border">
+               <tooltip><Tooltip text="Nom de la table" /></tooltip>
+            </Label>
+            <Label fx:id="_adresseDuSecondDescripteurDeTable" styleClass="border">
+               <tooltip><Tooltip text="Adresse du descripteur de table suivant" /></tooltip>
+            </Label>
+         </HBox>
+      </VBox>
+   </center>
+   <stylesheets>
+      <URL value="@styles.css" />
+   </stylesheets>
+</BorderPane>

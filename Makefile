@@ -5,10 +5,10 @@ CFLAGS         = -std=c11 -D_POSIX_C_SOURCE=20210601 $(OPTIM_OR_DEBUG) -pedantic
 CFLAGS        += -Wconversion -Wcast-align -Wcast-qual -Wdisabled-optimization -Wlogical-op -Wmissing-declarations -Wundef
 CFLAGS        += -Wmissing-include-dirs -Wredundant-decls -Wshadow -Wsign-conversion -Wswitch-default -Wwrite-strings
 CFLAGS        += -Wfloat-equal -fvisibility=hidden -fmessage-length=0 -pthread -MMD -MP
-CFLAGS_WIN64   = -I ncurses-for-mingw64/include/ncursesw -I ncurses-for-mingw64/include -D_WIN32_WINNT=0x0601 $(CFLAGS)
+CFLAGS_WIN64   = -D_WIN32_WINNT=0x0601 $(CFLAGS)
 LDFLAGS        = -lncurses -pthread
 LDFLAGS_LIB    = -pthread
-LDFLAGS_WIN64  = -static-libgcc -L ncurses-for-mingw64/lib -lncursesw -lws2_32
+LDFLAGS_WIN64  = -lws2_32 -static
 
 SRCS_LIB =\
  src/bataille_navale.c\
@@ -18,61 +18,65 @@ SRCS_LIB =\
  src/traces.c\
  src/utils.c
 
-SRCS =\
- src/ihm.c\
+SRCS_LINUX =\
+ src/ihm_ncurses.c\
  src/main.c
 
-OBJS           = $(SRCS:%.c=BUILD/%.o)
-OBJS_LIB       = $(SRCS_LIB:%.c=BUILD/LIB/%.o)
-OBJS_WIN64     = $(SRCS:%.c=BUILD/WIN64/%.o)
-OBJS_WIN64_LIB = $(SRCS_LIB:%.c=BUILD/WIN64/LIB/%.o)
+SRCS_WIN64 =\
+ src/ihm_dos.c\
+ src/main.c
 
-DEPS           = $(SRCS:%.c=BUILD/%.o.d)
-DEPS_LIB       = $(SRCS_LIB:%.c=BUILD/LIB/%.o.d)
-DEPS_WIN64     = $(SRCS:%.c=BUILD/WIN64/%.o.d)
+OBJS_LINUX_LIB = $(SRCS_LIB:%.c=BUILD/LIB/%.o)
+OBJS_LINUX     = $(SRCS_LINUX:%.c=BUILD/%.o)
+OBJS_WIN64_LIB = $(SRCS_LIB:%.c=BUILD/WIN64/LIB/%.o)
+OBJS_WIN64     = $(SRCS_WIN64:%.c=BUILD/WIN64/%.o)
+
+DEPS_LINUX_LIB = $(SRCS_LIB:%.c=BUILD/LIB/%.o.d)
+DEPS_LINUX     = $(SRCS_LINUX:%.c=BUILD/%.o.d)
 DEPS_WIN64_LIB = $(SRCS_LIB:%.c=BUILD/WIN64/LIB/%.o.d)
+DEPS_WIN64     = $(SRCS_WIN64:%.c=BUILD/WIN64/%.o.d)
                
-APP_NAME       = bataille_navale
-GAME           = BUILD/$(APP_NAME)
-GAME_LIB       = BUILD/lib$(APP_NAME).so
-GAME_WIN64     = BUILD/$(APP_NAME).exe
-GAME_WIN64_LIB = BUILD/$(APP_NAME).dll
+APP_NAME          = bataille_navale
+GAME_LINUX        = BUILD/$(APP_NAME)
+GAME_LINUX_LIB    = BUILD/lib$(APP_NAME).so
+GAME_WIN64        = BUILD/$(APP_NAME).exe
+GAME_WIN64_LIB    = BUILD/$(APP_NAME).dll
+GAME_WIN64_IMPLIB = BUILD/lib$(APP_NAME).dll.a
 
 .PHONY: all clean test
 
-all: $(GAME) $(GAME_LIB) $(GAME_WIN64)
+all: $(GAME_LINUX_LIB) $(GAME_LINUX) $(GAME_WIN64_LIB) $(GAME_WIN64)
 
 clean:
 	rm -fr BUILD
 
-usage: $(GAME)
-	./bn.sh $(GAME) usage ; true
+usage: $(GAME_LINUX)
+	./bn.sh $(GAME_LINUX) usage ; true
 
-test-ia: $(GAME)
-	./bn.sh $(GAME) ia
+test-ia: $(GAME_LINUX)
+	./bn.sh $(GAME_LINUX) ia
 
-test-deux-joueurs: $(GAME)
-	./bn.sh $(GAME) test
+test-deux-joueurs: $(GAME_LINUX)
+	./bn.sh $(GAME_LINUX) test
 
-test-wine: $(GAME_WIN64)
-	./bn.sh $(GAME) test-wine
+test-wine: $(GAME_LINUX) $(GAME_WIN64)
+	./bn.sh $(GAME_LINUX) test-wine
 
-externe: $(GAME)
-	./bn.sh $(GAME) externe
+externe: $(GAME_LINUX)
+	./bn.sh $(GAME_LINUX) externe
 
-$(GAME_LIB): $(OBJS_LIB)
-	$(CC) $(OBJS_LIB) -shared -o $@ $(LDFLAGS)
+$(GAME_LINUX_LIB): $(OBJS_LINUX_LIB)
+	$(CC) $(OBJS_LINUX_LIB) -shared -o $@ $(LDFLAGS)
 
-$(GAME): $(GAME_LIB) $(OBJS)
-	$(CC) $(OBJS) -o $@ $(LDFLAGS) -L BUILD -l$(APP_NAME)
+$(GAME_LINUX): $(GAME_LINUX_LIB) $(OBJS_LINUX)
+	$(CC) $(OBJS_LINUX) -o $@ $(LDFLAGS) -L BUILD -l$(APP_NAME)
 
-$(GAME_WIN64_LIB): $(OBJS_WIN64_LIB)
-	$(CC_WIN64) $(OBJS_WIN64_LIB) -shared -o $@ $(LDFLAGS_WIN64)
+$(GAME_WIN64_LIB) $(GAME_WIN64_IMPLIB): $(OBJS_WIN64_LIB)
+	$(CC_WIN64) $(OBJS_WIN64_LIB) -shared -o $(GAME_WIN64_LIB) $(LDFLAGS_WIN64) -Wl,--out-implib=$(GAME_WIN64_IMPLIB)
 
-$(GAME_WIN64): $(GAME_WIN64_LIB) $(OBJS_WIN64)
-	$(CC_WIN64) $(OBJS_WIN64) -o $@ $(LDFLAGS_WIN64) -L BUILD -l$(APP_NAME)
+$(GAME_WIN64): $(GAME_WIN64_IMPLIB) $(OBJS_WIN64)
+	$(CC_WIN64) $(OBJS_WIN64) -o $@ -L BUILD -l$(APP_NAME).dll $(LDFLAGS_WIN64)
 	cp /usr/x86_64-w64-mingw32/lib/libwinpthread-1.dll BUILD
-	cp ncurses-for-mingw64/bin/libncursesw6.dll        BUILD
 
 BUILD/LIB/%.o: %.c
 	@mkdir -p $$(dirname $@)
@@ -90,7 +94,7 @@ BUILD/WIN64/%.o: %.c
 	@mkdir -p $$(dirname $@)
 	$(CC_WIN64) -c $(CFLAGS_WIN64) -MF$@.d -MT$@ $< -o $@
 
--include $(DEPS)
--include $(DEPS_LIB)
+-include $(DEPS_LINUX)
+-include $(DEPS_LINUX_LIB)
 -include $(DEPS_WIN64)
 -include $(DEPS_WIN64_LIB)

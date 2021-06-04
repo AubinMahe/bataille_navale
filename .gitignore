@@ -3,3 +3,5 @@ Debug
 Debug-Win64
 .vs
 x64
+bin
+console-windows

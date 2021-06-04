@@ -52,15 +52,18 @@ int main( int argc, char * argv[] ) {
          return usage( argv[0], arg );
       }
    }
+   initialiser_le_journal( jeu, chemin_du_journal );
    if( 0 == jeu->nom_du_joueur[0] ) {
+      ECHEC( jeu->journal );
       return usage( argv[0], NULL );
    }
-   initialiser_le_journal( jeu, chemin_du_journal );
    pthread_t ia_thread = 0UL;
    if(( 0 == jeu->nom_de_l_adversaire[0] )&&( ! initialiser_ia( jeux, chemin_du_journal, &ia_thread ))) {
       return EXIT_FAILURE;
    }
-   initialiser_l_ihm( jeux );
+   if( ! initialiser_l_ihm( jeux )) {
+      return EXIT_FAILURE;
+   }
    if( ! initialiser_le_protocole( jeu, ia_thread != 0, DELAI_MAX_POUR_CONNECTER_LES_JOUEURS )) {
       return EXIT_FAILURE;
    }

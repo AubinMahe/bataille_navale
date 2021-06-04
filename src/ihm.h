@@ -2,7 +2,7 @@
 
 #include "bataille_navale.h"
 
-void initialiser_l_ihm( Jeu ** jeux );
+bool initialiser_l_ihm( Jeu ** jeux );
 void afficher( Jeu * jeu );
 bool interruption( void );
 void obtenir_la_decision_du_joueur( Jeu * jeu );

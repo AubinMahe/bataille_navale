@@ -20,7 +20,7 @@ elif [ "$2" == "" ] ; then
 else
    case "$2" in
    ia)
-      gnome-terminal --geometry 84x25+600+250 -- $1 --nom=Aubin $JOURNAL &
+      gnome-terminal --geometry 84x25+600+250 -- $1 --nom=Aubin $JOURNAL 2>/tmp/bataille_navale/launch.txt &
    ;;
    test)
       gnome-terminal --geometry 84x25-0-0 -- $1 --nom=Aubin  --reseau=127.0.0.1:2416/127.0.0.1:2417 $JOURNAL &
@@ -28,14 +28,11 @@ else
    ;;
    test-wine)
       gnome-terminal --geometry 84x25-0-0 -- $1 --nom=Aubin  --reseau=127.0.0.1:2416/127.0.0.1:2417 $JOURNAL &
-      export TERM=xterm
       cd BUILD
-      #gnome-terminal --geometry 84x25+0-0 -- wine bataille_navale --nom=Muriel --reseau=127.0.0.1:2417/127.0.0.1:2416 $JOURNAL &
-      wineconsole
-      # bataille_navale --nom=Muriel --reseau=127.0.0.1:2417/127.0.0.1:2416 --journal=/tmp/bataille_navale
+      wineconsole bataille_navale --nom=Muriel --reseau=127.0.0.1:2417/127.0.0.1:2416 $JOURNAL &
    ;;
    externe)
-      gnome-terminal --geometry 84x25-0-0 -- $1 --nom=Aubin  --reseau=192.168.1.10:2416/10.0.2.15:2417 $JOURNAL &
+      gnome-terminal --geometry 84x25-0-0 -- $1 --nom=Aubin --reseau=192.168.1.10:2416/10.0.2.15:2417 $JOURNAL &
    ;;
    *)
       usage
