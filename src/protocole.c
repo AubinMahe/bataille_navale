@@ -8,7 +8,6 @@
 #include <fcntl.h>   // fcntl, F_SETFL, F_GETFL, O_NONBLOCK
 #include <stdlib.h>  // malloc, free, atoi
 #include <string.h>  // memcpy, memset, strchr, strlen
-#include <unistd.h>  // close()
 
 bool envoyer_message( Jeu * jeu, Entete entete, const void * corps, size_t taille_du_corps ) {
    TRACE( jeu->journal, "%s, taille : %d", entete_texte( entete ), taille_du_corps );
@@ -214,8 +213,8 @@ BN_API bool initialiser_le_protocole( Jeu * jeu, bool l_adversaire_est_l_ordinat
          ECHEC( jeu->journal );
          return false;
       }
-      ssize_t        retCode;
-      bool           encore;
+      ssize_t        retCode    = 0;
+      bool           encore     = false;
       const uint64_t atStart    = heure_courante_en_ms();
       const size_t   taille_msg = strlen( jeu->nom_du_joueur ) + 1;
       memset( jeu->nom_de_l_adversaire, 0, ADVERSAIRE_MAX );

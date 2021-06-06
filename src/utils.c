@@ -21,13 +21,13 @@ void sleep_ms( uint64_t ms ) {
 #  include <time.h>   // nanosleep
 #  include <unistd.h> // getpid()
 
-uint64_t heure_courante_en_ms( void ) {
+BN_API uint64_t heure_courante_en_ms( void ) {
    struct timeval tv;
    gettimeofday( &tv, NULL );
    return (uint64_t)( tv.tv_sec * 1000 + tv.tv_usec / 1000 );
 }
 
-void sleep_ms( uint64_t ms ) {
+BN_API void sleep_ms( uint64_t ms ) {
    struct timespec ts = {
       .tv_sec  = (long)( ms / 1000UL ),
       .tv_nsec = (long)(( ms % 1000UL ) * 1000UL * 1000UL )
@@ -38,7 +38,7 @@ void sleep_ms( uint64_t ms ) {
 
 #ifdef _MSVC_VER
 
-int pthread_create( pthread_t * id, void * attr, void *( * routine )( void * ), void * arg ) {
+BN_API int pthread_create( pthread_t * id, void * attr, void *( * routine )( void * ), void * arg ) {
    DWORD threadId = 0;
    HANDLE hThread = CreateThread( NULL, 0, routine, arg, 0, &threadId );
    *id = hThread;
@@ -46,13 +46,19 @@ int pthread_create( pthread_t * id, void * attr, void *( * routine )( void * ), 
    (void)attr;
 }
 
-int pthread_join( pthread_t id, void ** not_used ) {
+BN_API int pthread_join( pthread_t id, void ** not_used ) {
    WaitForSingleObject( id, INFINITE );
    return 0;
 }
 
 #endif
 
-void initialiser_le_generateur_de_nombre_aleatoire( void ) {
+BN_API void initialiser_le_generateur_de_nombre_aleatoire( void ) {
    srand((unsigned)(((unsigned)getpid()) * heure_courante_en_ms()));
+}
+
+int nombre_aleatoire_entre_zero_et( double max ) {
+   double value = max * rand();
+   value /= RAND_MAX;
+   return (int)value;
 }

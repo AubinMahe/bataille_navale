@@ -5,3 +5,4 @@ Debug-Win64
 x64
 bin
 console-windows
+/Tests/

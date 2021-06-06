@@ -8,20 +8,6 @@
 #  include <windows.h>
    typedef SSIZE_T         ssize_t;
    typedef SOCKET          socket_t;
-#  ifdef _MSC_VER
-#     define  PATH_MAX     MAX_PATH
-      typedef HANDLE       pthread_t;
-      int pthread_create( pthread_t * id, void * attr, void * ( * routine )( void *), void * arg );
-      int pthread_join( pthread_t id, void** not_used );
-      pthread_t pthread_self( void );
-#  else
-#     include <pthread.h>
-#  endif
-#  define  send(S,M,T,F)   send(S,M,(int)T,F)
-#  define  recv(S,M,T,F)   send(S,M,(int)T,F)
-#  define  make_dir(C,P)   _mkdir(C)
-#  define  getpid          _getpid
-#  define  FMT_SIZE_T      "ll"
 #  ifdef BUILDING_DLL
 #     ifdef __GNUC__
 #        define BN_API __attribute__ ((dllexport))
@@ -35,12 +21,27 @@
 #        define BN_API __declspec(dllimport)
 #     endif
 #  endif
+#  ifdef _MSC_VER
+#     define  PATH_MAX     MAX_PATH
+      typedef HANDLE       pthread_t;
+      BN_API int pthread_create( pthread_t * id, void * attr, void * ( * routine )( void *), void * arg );
+      BN_API int pthread_join( pthread_t id, void** not_used );
+      BN_API pthread_t pthread_self( void );
+#  else
+#     include <pthread.h>
+#  endif
+#  define  send(S,M,T,F)   send(S,M,(int)T,F)
+#  define  recv(S,M,T,F)   send(S,M,(int)T,F)
+#  define  make_dir(C,P)   _mkdir(C)
+#  define  getpid          _getpid
+#  define  FMT_SIZE_T      "ll"
 #else
 #  include <arpa/inet.h>
 #  include <pthread.h>
 #  include <sys/socket.h>
 #  include <sys/time.h>
 #  include <sys/un.h>
+#  include <unistd.h>
    typedef int             socket_t;
 #  define  make_dir(C,P)   mkdir(C,P)
 #  define  FMT_SIZE_T      "l"

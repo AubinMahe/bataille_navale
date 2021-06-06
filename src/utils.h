@@ -5,6 +5,7 @@
 
 #include "portability.h"
 
-void initialiser_le_generateur_de_nombre_aleatoire( void );
-uint64_t heure_courante_en_ms( void );
-void     sleep_ms( uint64_t ms );
+BN_API void     initialiser_le_generateur_de_nombre_aleatoire( void );
+BN_API int      nombre_aleatoire_entre_zero_et( double max );
+BN_API uint64_t heure_courante_en_ms( void );
+BN_API void     sleep_ms( uint64_t ms );

@@ -15,12 +15,6 @@
 
 typedef Etat_torpille Tentatives[COLONNE_MAX][LIGNE_MAX];
 
-static int nombre_aleatoire_entre_zero_et( double max ) {
-   double value = max * rand();
-   value /= RAND_MAX;
-   return (int)value;
-}
-
 static bool placer_un_navire( Jeu * ia, Etat_du_jeu prochain ) {
    TRACE( ia->journal, "Navire n°%d", ia->index_navire );
    Navire * navire     = ia->navires + ia->index_navire;
@@ -176,20 +170,20 @@ static cherche_autour_t cherche_autour[] = {
 
 static bool cherche_un_bateau_touche( Jeu * ia, Tentatives tentatives, Torpille * torpille ) {
    ENTREE( ia->journal );
-   bool trouve = false;
-   for( int i = 0; ( ! trouve )&&( i < ia->index_torpille ); ++i ) {
+   bool placee = false;
+   for( int i = 0; ( ! placee )&&( i < ia->index_torpille ); ++i ) {
       Torpille * t = ia->torpilles + i;
       if( t->etat == et_Touche ) {
          int essais = 0;
          // Tente de placer une mine autour du point "t" dans un ordre aléatoire
-         while(( essais != 0x0F )&&( ! trouve )) {
+         while(( essais != 0x0F )&&( ! placee )) {
             int index = nombre_aleatoire_entre_zero_et( 4 );
-            trouve = cherche_autour[index]( ia, tentatives, t, torpille );
             essais = essais | ( 1 << index );
+            placee = cherche_autour[index]( ia, tentatives, t, torpille );
          }
       }
    }
-   return trouve;
+   return placee;
 }
 
 static bool placer_la_torpille_au_hasard( Jeu * ia, Torpille * torpille ) {
